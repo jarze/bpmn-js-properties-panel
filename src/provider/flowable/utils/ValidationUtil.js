@@ -31,11 +31,13 @@ export function isIdValid(element, idValue, translate) {
 }
 
 export function validateId(idValue, translate) {
+
   if (containsSpace(idValue)) {
     return translate('ID must not contain spaces.');
   }
 
   if (!ID_REGEX.test(idValue)) {
+
     if (QNAME_REGEX.test(idValue)) {
       return translate('ID must not contain prefix.');
     }

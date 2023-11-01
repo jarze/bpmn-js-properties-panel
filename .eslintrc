@@ -8,7 +8,9 @@
     "import/first": "error",
     "import/no-amd": "error",
     "import/no-webpack-loader-syntax": "error",
-    "react-hooks/exhaustive-deps": "off"
+    "react-hooks/exhaustive-deps": "off",
+    "array-bracket-spacing": "off",
+    "indent": false
   },
   "plugins": [
     "import"
