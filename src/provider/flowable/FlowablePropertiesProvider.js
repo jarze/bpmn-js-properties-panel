@@ -58,4 +58,4 @@ export default class FlowablePropertiesProvider {
   }
 }
 
-BpmnPropertiesProvider.$inject = ['propertiesPanel', 'injector'];
+FlowablePropertiesProvider.$inject = ['propertiesPanel', 'injector'];

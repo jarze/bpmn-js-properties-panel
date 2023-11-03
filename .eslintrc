@@ -10,7 +10,9 @@
     "import/no-webpack-loader-syntax": "error",
     "react-hooks/exhaustive-deps": "off",
     "array-bracket-spacing": "off",
-    "indent": false
+    "indent": false,
+    "no-undef": "error",
+    "no-label-var": "error"
   },
   "plugins": [
     "import"

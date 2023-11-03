@@ -22,38 +22,118 @@ import {
  * Defines condition properties for conditional sequence flow.
  * Cf. https://docs.camunda.org/manual/latest/reference/bpmn20/gateways/sequence-flow/
  */
-export function ConditionProps(props, propertyKey) {
+export function ConditionProps(props, property) {
   const { element } = props;
 
-  if (
-    !(
-      isElementSupport(element, 'conditionsequenceflowpackage') ||
-      isElementSupport(element, 'conditionaleventpackage')
-    ) &&
-    !getConditionalEventDefinition(element)
-  ) {
+  if (!property || !isElementSupport(element, property.name)) {
     return [];
   }
 
+  const { properties } = property;
   const entries = [];
 
-  entries.push({
-    id: 'conditionType',
-    component: ConditionType,
-    isEdited: isSelectEntryEdited,
-  });
-
-  const conditionType = getConditionType(element);
-
-  if (conditionType === 'expression') {
-    entries.push({
-      id: 'conditionExpression',
-      component: ConditionExpression,
-      isEdited: isTextFieldEntryEdited,
-    });
+  for (let index = 0; index < properties.length; index++) {
+    const item = properties[index];
+    // 暂时处理string
+    if (item.type === 'String') {
+      entries.push({
+        id: item.id,
+        component: getPropertyComponent(item),
+        isEdited: isTextFieldEntryEdited,
+      });
+    }
   }
 
   return entries;
+}
+
+// function Components(properties) {
+//   switch (type) {
+//     case 'String':
+//       return (
+//         <TextFieldEntry
+//           element={element}
+//           id={properties.id}
+//           label={translate('Condition Expression')}
+//           getValue={getValue}
+//           setValue={setValue}
+//           debounce={debounce}
+//         />
+//       );
+
+//     default:
+//       return (
+//         <TextFieldEntry
+//           element={element}
+//           id={properties.id}
+//           label={translate('Condition Expression')}
+//           getValue={getValue}
+//           setValue={setValue}
+//           debounce={debounce}
+//         />
+//       );
+//   }
+// }
+
+function getPropertyComponent(properties) {
+  function PropertyComponent(props) {
+    const { element } = props;
+    const commandStack = useService('commandStack'),
+      bpmnFactory = useService('bpmnFactory'),
+      translate = useService('translate'),
+      debounce = useService('debounceInput');
+
+    const getValue = () => {
+      return getConditionExpression(element).get('body');
+    };
+
+    const setValue = value => {
+      if (value === '') {
+        updateCondition(element, commandStack, undefined);
+      } else {
+        // (2) Create and set formalExpression element containing the conditionExpression
+        const attributes = { body: '' };
+        const formalExpressionElement = createFormalExpression(
+          element,
+          attributes,
+          bpmnFactory
+        );
+
+        updateCondition(element, commandStack, formalExpressionElement);
+      }
+      // createElement(
+      //   'camunda:In',
+      //   {
+      //     businessKey: DEFAULT_BUSINESS_KEY,
+      //   },
+      //   parent,
+      //   bpmnFactory
+      // );
+      // const conditionExpression = createElement(
+      //   'bpmn:FormalExpression',
+      // 	{ body: value },
+      //   is(element, 'bpmn:SequenceFlow')
+      //     ? getBusinessObject(element)
+      //     : getConditionalEventDefinition(element),
+      //   bpmnFactory
+      // );
+
+      // updateCondition(element, commandStack, conditionExpression);
+    };
+
+    return (
+      <TextFieldEntry
+        element={element}
+        id={properties.id}
+        label={translate(properties.title)}
+        getValue={getValue}
+        setValue={setValue}
+        debounce={debounce}
+      />
+    );
+  }
+
+  return PropertyComponent;
 }
 
 function ConditionType(props) {
@@ -99,40 +179,6 @@ function ConditionType(props) {
       getValue={getValue}
       setValue={setValue}
       getOptions={getOptions}
-    />
-  );
-}
-
-function ConditionExpression(props) {
-  const { element } = props;
-
-  const commandStack = useService('commandStack'),
-    bpmnFactory = useService('bpmnFactory'),
-    translate = useService('translate'),
-    debounce = useService('debounceInput');
-
-  const getValue = () => {
-    return getConditionExpression(element).get('body');
-  };
-
-  const setValue = value => {
-    const conditionExpression = createFormalExpression(
-      element,
-      { body: value },
-      bpmnFactory
-    );
-
-    updateCondition(element, commandStack, conditionExpression);
-  };
-
-  return (
-    <TextFieldEntry
-      element={element}
-      id='conditionExpression'
-      label={translate('Condition Expression')}
-      getValue={getValue}
-      setValue={setValue}
-      debounce={debounce}
     />
   );
 }
