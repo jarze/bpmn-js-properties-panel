@@ -26,7 +26,7 @@ export function getPropertyComponent(
 
     return componentType({
       element,
-      id: properties.id,
+      id: properties.key || properties.id,
       label: translate(properties.title),
       tooltip: properties.description && (
         <div>

@@ -106,7 +106,9 @@ export function stencilsTypeParse(element) {
   }
 }
 export function getElementStencil(element) {
+  if (!element) return {};
+  console.log(element, '---------88888');
   const id = stencilsTypeParse(element);
-  console.log(element, '---------88888', id, stencilsMap);
+  console.log(id, stencilsMap);
   return stencilsMap[id] || {};
 }

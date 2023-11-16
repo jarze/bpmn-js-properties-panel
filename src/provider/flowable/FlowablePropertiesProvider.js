@@ -5,7 +5,9 @@ import {
   ConditionProps,
   BaseAttrProps,
   BaseProps,
+  UserAssignmentProps,
 } from './properties';
+
 // import { propertyPackagesMap } from '../utils/PropertiesUtil';
 
 function FlowGroup(element, injector) {
@@ -24,22 +26,6 @@ function FlowGroup(element, injector) {
 
   return null;
 }
-
-// function FormGroup(element, injector) {
-//   const translate = injector.get('translate');
-//   const group = {
-//     label: translate('Form'),
-//     id: 'form',
-//     component: Group,
-//     entries: [...FormProps({ element })],
-//   };
-
-//   if (group.entries.length) {
-//     return group;
-//   }
-
-//   return null;
-// }
 
 function FormDataGroup(element, injector) {
   const translate = injector.get('translate');
@@ -88,15 +74,35 @@ function BaseAttrGroup(element, injector) {
   return null;
 }
 
-function getGroups(element, injector) {
-  const groups = [
-    // FormGroup(element, injector),
-    ConditionGroup(element, injector),
-    FormDataGroup(element, injector),
-    BaseAttrGroup(element, injector),
-    FlowGroup(element, injector),
-  ];
+function UserAssignmentGroup(element, injector) {
+  const translate = injector.get('translate');
 
+  const group = {
+    label: translate('User assignment'),
+    id: 'Flowable__UserAssignment',
+    component: Group,
+    entries: [...UserAssignmentProps({ element })],
+  };
+
+  if (group.entries.length) {
+    return group;
+  }
+
+  return null;
+}
+
+const FLOWABLE_PLATFORM_GROUPS = [
+  ConditionGroup,
+  UserAssignmentGroup,
+  FormDataGroup,
+  BaseAttrGroup,
+  FlowGroup,
+];
+
+function getGroups(element, injector) {
+  const groups = FLOWABLE_PLATFORM_GROUPS.map(createGroup =>
+    createGroup(element, injector)
+  );
   // contract: if a group returns null, it should not be displayed at all
   return groups.filter(group => group !== null);
 }

@@ -9,7 +9,7 @@
 // export { MultiInstanceProps } from './MultiInstanceProps';
 // export { NameProps } from './NameProps';
 // export { ProcessProps } from './ProcessProps';
-// export { SignalProps } from './SignalProps';
+export { UserAssignmentProps } from './UserAssignmentProps';
 export { FormDataProps } from './FormDataProps';
 export { BaseProps } from './BaseProps';
 export { BaseAttrProps } from './BaseAttrProps';
