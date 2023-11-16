@@ -1,22 +1,17 @@
-import {
-  isAny
-} from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
+import { isAny } from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
 
-import {
-  getBusinessObject,
-  is
-} from 'bpmn-js/lib/util/ModelUtil';
+import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
 
-import {
-  find
-} from 'min-dash';
+import { find } from 'min-dash';
 
 export function isErrorSupported(element) {
-  return isAny(element, [
-    'bpmn:StartEvent',
-    'bpmn:BoundaryEvent',
-    'bpmn:EndEvent'
-  ]) && !!getErrorEventDefinition(element);
+  return (
+    isAny(element, [
+      'bpmn:StartEvent',
+      'bpmn:BoundaryEvent',
+      'bpmn:EndEvent',
+    ]) && !!getErrorEventDefinition(element)
+  );
 }
 
 export function getErrorEventDefinition(element) {
@@ -24,11 +19,13 @@ export function getErrorEventDefinition(element) {
 }
 
 export function isTimerSupported(element) {
-  return isAny(element, [
-    'bpmn:StartEvent',
-    'bpmn:IntermediateCatchEvent',
-    'bpmn:BoundaryEvent'
-  ]) && !!getTimerEventDefinition(element);
+  return (
+    isAny(element, [
+      'bpmn:StartEvent',
+      'bpmn:IntermediateCatchEvent',
+      'bpmn:BoundaryEvent',
+    ]) && !!getTimerEventDefinition(element)
+  );
 }
 
 /**
@@ -39,7 +36,6 @@ export function isTimerSupported(element) {
  * @return {string|undefined} the timer definition type
  */
 export function getTimerDefinitionType(timer) {
-
   if (!timer) {
     return;
   }
@@ -75,20 +71,22 @@ export function getEventDefinition(element, eventType) {
 
   const eventDefinitions = businessObject.get('eventDefinitions') || [];
 
-  return find(eventDefinitions, function(definition) {
+  return find(eventDefinitions, function (definition) {
     return is(definition, eventType);
   });
 }
 
 export function isMessageSupported(element) {
-  return is(element, 'bpmn:ReceiveTask') || (
-    isAny(element, [
+  return (
+    is(element, 'bpmn:ReceiveTask') ||
+    (isAny(element, [
       'bpmn:StartEvent',
       'bpmn:EndEvent',
       'bpmn:IntermediateThrowEvent',
       'bpmn:BoundaryEvent',
-      'bpmn:IntermediateCatchEvent'
-    ]) && !!getMessageEventDefinition(element)
+      'bpmn:IntermediateCatchEvent',
+    ]) &&
+      !!getMessageEventDefinition(element))
   );
 }
 
@@ -115,10 +113,12 @@ export function getSignalEventDefinition(element) {
 }
 
 export function isLinkSupported(element) {
-  return isAny(element, [
-    'bpmn:IntermediateThrowEvent',
-    'bpmn:IntermediateCatchEvent'
-  ]) && !!getLinkEventDefinition(element);
+  return (
+    isAny(element, [
+      'bpmn:IntermediateThrowEvent',
+      'bpmn:IntermediateCatchEvent',
+    ]) && !!getLinkEventDefinition(element)
+  );
 }
 
 export function isSignalSupported(element) {
@@ -142,22 +142,30 @@ export function isEscalationSupported(element) {
 export function getEscalation(element) {
   const escalationEventDefinition = getEscalationEventDefinition(element);
 
-  return escalationEventDefinition && escalationEventDefinition.get('escalationRef');
+  return (
+    escalationEventDefinition && escalationEventDefinition.get('escalationRef')
+  );
 }
 
 export function isCompensationSupported(element) {
-  return isAny(element, [
-    'bpmn:EndEvent',
-    'bpmn:IntermediateThrowEvent'
-  ]) && !!getCompensateEventDefinition(element);
+  return (
+    isAny(element, ['bpmn:EndEvent', 'bpmn:IntermediateThrowEvent']) &&
+    !!getCompensateEventDefinition(element)
+  );
 }
 
 export function getCompensateEventDefinition(element) {
   return getEventDefinition(element, 'bpmn:CompensateEventDefinition');
 }
 
+export function getConditionalEventDefinition(element) {
+  return getEventDefinition(element, 'bpmn:ConditionalEventDefinition');
+}
+
 export function getCompensateActivity(element) {
   const compensateEventDefinition = getCompensateEventDefinition(element);
 
-  return compensateEventDefinition && compensateEventDefinition.get('activityRef');
+  return (
+    compensateEventDefinition && compensateEventDefinition.get('activityRef')
+  );
 }

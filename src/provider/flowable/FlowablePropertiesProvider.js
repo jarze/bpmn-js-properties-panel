@@ -1,28 +1,29 @@
 import { Group, ListGroup } from '@bpmn-io/properties-panel';
 
-import { FormDataProps, ConditionProps, BaseProps } from './properties';
+import {
+  FormDataProps,
+  ConditionProps,
+  BaseAttrProps,
+  BaseProps,
+} from './properties';
 // import { propertyPackagesMap } from '../utils/PropertiesUtil';
 
-// function FlowGroup(element, injector) {
-//   const translate = injector.get('translate');
+function FlowGroup(element, injector) {
+  const translate = injector.get('translate');
 
-//   // const entries = Object.keys(propertyPackagesMap).reduce(
-//   //   (i, p) => [...p, ...BaseProps({ element }, propertyPackagesMap[i])],
-//   //   []
-//   // );
-//   const group = {
-//     label: translate('Flow'),
-//     id: 'flow',
-//     component: Group,
-//     entries: [...BaseProps({ element })],
-//   };
+  const group = {
+    label: translate('Flow'),
+    id: 'flow',
+    component: Group,
+    entries: [...BaseProps({ element })],
+  };
 
-//   if (group.entries.length) {
-//     return group;
-//   }
+  if (group.entries.length) {
+    return group;
+  }
 
-//   return null;
-// }
+  return null;
+}
 
 // function FormGroup(element, injector) {
 //   const translate = injector.get('translate');
@@ -43,7 +44,7 @@ import { FormDataProps, ConditionProps, BaseProps } from './properties';
 function FormDataGroup(element, injector) {
   const translate = injector.get('translate');
   const group = {
-    label: translate('Form fields'),
+    label: translate('Form Data'),
     id: 'FlowablePlatform__FormData',
     component: ListGroup,
     ...FormDataProps({ element, injector }),
@@ -72,12 +73,28 @@ function ConditionGroup(element, injector) {
   return null;
 }
 
+function BaseAttrGroup(element, injector) {
+  const translate = injector.get('translate');
+  const group = {
+    label: translate('Base Setting'),
+    id: 'baseAttr',
+    component: Group,
+    entries: [...BaseAttrProps({ element })],
+  };
+
+  if (group.entries.length) {
+    return group;
+  }
+  return null;
+}
+
 function getGroups(element, injector) {
   const groups = [
     // FormGroup(element, injector),
-    FormDataGroup(element, injector),
     ConditionGroup(element, injector),
-    // FlowGroup(element, injector),
+    FormDataGroup(element, injector),
+    BaseAttrGroup(element, injector),
+    FlowGroup(element, injector),
   ];
 
   // contract: if a group returns null, it should not be displayed at all

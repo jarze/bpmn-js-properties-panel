@@ -12,4 +12,5 @@
 // export { SignalProps } from './SignalProps';
 export { FormDataProps } from './FormDataProps';
 export { BaseProps } from './BaseProps';
+export { BaseAttrProps } from './BaseAttrProps';
 export { ConditionProps } from './ConditionProps';
