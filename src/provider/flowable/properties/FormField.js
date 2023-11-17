@@ -34,15 +34,22 @@ export default function FormField(props) {
   const entries = [
     {
       id: idPrefix + '-formFieldID',
-      component: Id,
-      idPrefix,
+      component: FormText,
       formField,
+      properties: {
+        key: 'id',
+        title: 'ID',
+        description: 'Refers to the process variable name',
+      },
     },
     {
       id: idPrefix + '-formFieldLabel',
-      component: Label,
-      idPrefix,
+      component: FormText,
       formField,
+      properties: {
+        key: 'name',
+        title: 'Label',
+      },
     },
     {
       id: idPrefix + '-formFieldType',
@@ -52,38 +59,53 @@ export default function FormField(props) {
     },
     {
       id: idPrefix + '-formFieldExpression',
-      component: Expression,
-      idPrefix,
+      component: FormText,
       formField,
+      properties: {
+        key: 'expression',
+        title: 'Expression',
+      },
     },
     {
       id: idPrefix + '-formFieldVariable',
-      component: Variable,
-      idPrefix,
+      component: FormText,
       formField,
+      properties: {
+        key: 'variable',
+        title: 'Variable',
+      },
     },
   ];
 
   if (!DEFINED_TYPE_VALUES.includes(formField.get('type'))) {
     entries.push({
       id: idPrefix + '-formFieldCustomType',
-      component: CustomType,
-      idPrefix,
+      component: FormText,
       formField,
+      properties: {
+        key: 'type',
+        title: 'Custom type',
+      },
     });
     entries.push({
       id: idPrefix + '-formFieldCustomUrl',
-      component: CustomUrl,
-      idPrefix,
+      component: FormText,
       formField,
+      properties: {
+        key: 'url',
+        title: 'Url',
+      },
     });
   }
 
   entries.push({
     id: idPrefix + '-formFieldDefaultValue',
-    component: DefaultValue,
-    idPrefix,
+    component: FormText,
     formField,
+    properties: {
+      key: 'default',
+      title: 'Default value',
+    },
   });
 
   if (formField.get('type') === 'enum') {
@@ -95,31 +117,49 @@ export default function FormField(props) {
     });
     entries.push({
       id: idPrefix + '-formFieldMultiple',
-      component: Multiple,
-      idPrefix,
+      component: FormText,
       formField,
+      properties: {
+        key: 'checkbox',
+        title: 'Multiple',
+      },
+      componentType: CheckboxEntry,
     });
   }
 
   entries.push({
     id: idPrefix + '-formFieldRequired',
-    component: Required,
-    idPrefix,
+    component: FormText,
     formField,
+    properties: {
+      key: 'required',
+      title: 'Required',
+    },
+    componentType: CheckboxEntry,
   });
 
   entries.push({
     id: idPrefix + '-formFieldWritable',
-    component: Writable,
-    idPrefix,
+    component: FormText,
     formField,
+    properties: {
+      key: 'writable',
+      title: 'Writable',
+      defaultValue: true,
+    },
+    componentType: CheckboxEntry,
   });
 
   entries.push({
     id: idPrefix + '-formFieldReadable',
-    component: Readable,
-    idPrefix,
+    component: FormText,
     formField,
+    properties: {
+      key: 'readable',
+      title: 'Readable',
+      defaultValue: true,
+    },
+    componentType: CheckboxEntry,
   });
 
   entries.push(
@@ -140,8 +180,17 @@ export default function FormField(props) {
   return entries;
 }
 
-function TextAttr(key, options, props, componentType = TextFieldEntry) {
-  const { element, formField } = props;
+function FormText(props) {
+  const {
+    element,
+    formField,
+    properties,
+    componentType = TextFieldEntry,
+  } = props;
+
+  const { key, title, description, defaultValue } = properties;
+
+  const translate = useService('translate');
   const commandStack = useService('commandStack');
   const debounce = useService('debounceInput');
   const setValue = value => {
@@ -153,84 +202,19 @@ function TextAttr(key, options, props, componentType = TextFieldEntry) {
   };
 
   const getValue = () => {
-    return formField.get(key);
+    const v = formField.get(key);
+    return v === undefined ? defaultValue : v;
   };
 
   return componentType({
     element: formField,
     id: props.id,
-    ...options,
+    label: translate(title),
+    description: translate(description),
     getValue,
     setValue,
     debounce,
   });
-}
-
-function Id(props) {
-  const translate = useService('translate');
-  return TextAttr(
-    'id',
-    {
-      label: translate('ID'),
-      description: translate('Refers to the process variable name'),
-    },
-    props
-  );
-}
-
-function Label(props) {
-  const translate = useService('translate');
-  return TextAttr('name', { label: translate('Label') }, props);
-}
-
-function Expression(props) {
-  const translate = useService('translate');
-  return TextAttr('expression', { label: translate('Expression') }, props);
-}
-
-function Variable(props) {
-  const translate = useService('translate');
-  return TextAttr('variable', { label: translate('Variable') }, props);
-}
-
-function Required(props) {
-  const translate = useService('translate');
-  return TextAttr(
-    'required',
-    { label: translate('Required') },
-    props,
-    CheckboxEntry
-  );
-}
-
-function Readable(props) {
-  const translate = useService('translate');
-  return TextAttr(
-    'readable',
-    { label: translate('Readable') },
-    props,
-    CheckboxEntry
-  );
-}
-
-function Writable(props) {
-  const translate = useService('translate');
-  return TextAttr(
-    'writable',
-    { label: translate('Writable') },
-    props,
-    CheckboxEntry
-  );
-}
-
-function Multiple(props) {
-  const translate = useService('translate');
-  return TextAttr(
-    'checkbox',
-    { label: translate('Multiple') },
-    props,
-    CheckboxEntry
-  );
 }
 
 function Type(props) {
@@ -281,21 +265,6 @@ function Type(props) {
     setValue,
     getOptions,
   });
-}
-
-function CustomType(props) {
-  const translate = useService('translate');
-  return TextAttr('type', { label: translate('Custom type') }, props);
-}
-
-function CustomUrl(props) {
-  const translate = useService('translate');
-  return TextAttr('url', { label: translate('Url') }, props);
-}
-
-function DefaultValue(props) {
-  const translate = useService('translate');
-  return TextAttr('default', { label: translate('Default value') }, props);
 }
 
 function Value(props) {
