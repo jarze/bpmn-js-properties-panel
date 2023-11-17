@@ -1,5 +1,5 @@
 import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
-
+import { ListGroup } from '@bpmn-io/properties-panel';
 import {
   getExtensionElementsList,
   addExtensionElements,
@@ -16,15 +16,13 @@ const TAG = 'flowable:FormProperty';
 
 export function FormDataProps({ element, injector }) {
   if (!isElementSupport(element, 'formpropertiespackage')) {
-    return;
+    return null;
   }
-  // if (!isFormDataSupported(element)) {
-  //   return;
-  // }
 
   const formFields = getFormFieldsList(element) || [];
 
   const bpmnFactory = injector.get('bpmnFactory'),
+    translate = injector.get('translate'),
     commandStack = injector.get('commandStack');
 
   const items = formFields.map((formField, index) => {
@@ -43,11 +41,16 @@ export function FormDataProps({ element, injector }) {
     };
   });
 
-  return {
+  const group = {
+    label: translate('Form Data'),
+    id: 'FlowablePlatform__FormData',
+    component: ListGroup,
     items,
     add: addFactory({ bpmnFactory, commandStack, element }),
     shouldSort: false,
   };
+
+  return group;
 }
 
 function addFactory({ bpmnFactory, commandStack, element }) {

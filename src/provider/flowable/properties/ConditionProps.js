@@ -1,11 +1,6 @@
 import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
-
-import { isAny } from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
-
 import { getEventDefinition } from '../../bpmn/utils/EventDefinitionUtil';
-
 import { createElement } from '../../../utils/ElementUtil';
-
 import { useService } from '../../../hooks';
 import { isElementSupport } from '../utils/PropertiesUtil';
 
@@ -14,16 +9,15 @@ import {
   isTextFieldEntryEdited,
   SelectEntry,
   isSelectEntryEdited,
-  TextAreaEntry,
-  isTextAreaEntryEdited,
+  Group,
 } from '@bpmn-io/properties-panel';
 
 /**
  * Defines condition properties for conditional sequence flow.
  * Cf. https://docs.camunda.org/manual/latest/reference/bpmn20/gateways/sequence-flow/
  */
-export function ConditionProps(props, propertyKey) {
-  const { element } = props;
+export function ConditionProps(props) {
+  const { element, injector } = props;
 
   if (
     !(
@@ -32,7 +26,7 @@ export function ConditionProps(props, propertyKey) {
     ) &&
     !getConditionalEventDefinition(element)
   ) {
-    return [];
+    return null;
   }
 
   const entries = [];
@@ -53,7 +47,15 @@ export function ConditionProps(props, propertyKey) {
     });
   }
 
-  return entries;
+  const translate = injector.get('translate');
+
+  const group = {
+    label: translate('Condition'),
+    id: 'Flowable__Condition',
+    component: Group,
+    entries,
+  };
+  return group;
 }
 
 function ConditionType(props) {

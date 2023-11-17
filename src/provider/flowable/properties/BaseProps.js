@@ -1,249 +1,115 @@
-import { getBusinessObject, is } from 'bpmn-js/lib/util/ModelUtil';
-
-import { isAny } from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
-
-import { getEventDefinition } from '../../bpmn/utils/EventDefinitionUtil';
-
-import { createElement } from '../../../utils/ElementUtil';
+import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 
 import { useService } from '../../../hooks';
-import { isElementSupport } from '../utils/PropertiesUtil';
-
 import {
-  TextFieldEntry,
-  isTextFieldEntryEdited,
-  SelectEntry,
-  isSelectEntryEdited,
-  TextAreaEntry,
-  isTextAreaEntryEdited,
-} from '@bpmn-io/properties-panel';
+  propertyPackagesMap,
+  getElementStencil,
+  properTransform,
+} from '../utils/PropertiesUtil';
 
-/**
- * Defines condition properties for conditional sequence flow.
- * Cf. https://docs.camunda.org/manual/latest/reference/bpmn20/gateways/sequence-flow/
- */
-export function ConditionProps(props, property) {
-  const { element } = props;
+import { TextFieldEntry, Group } from '@bpmn-io/properties-panel'; // import { getElementComponent } from '../Elements/ElementInput';
+import { pushPropertiesEntries, pushPropertyEntries } from './BaseAttrProps';
+import { FormDataProps } from './FormDataProps';
+import { ConditionProps } from './ConditionProps';
 
-  if (!property || !isElementSupport(element, property.name)) {
-    return [];
+// 将基础已有的配置排除掉
+const excludeBaseNames = [
+  'process_idpackage',
+  'overrideidpackage',
+  'namepackage',
+  'documentationpackage',
+  'isexecutablepackage',
+];
+
+// 将一些不用的配置去掉
+const excludeUnUseNames = [
+  /** 基数(多实例) */
+  'multiinstance_cardinalitypackage',
+  /** 集合(多实例) */
+  'multiinstance_collectionpackage',
+  /** 元素变量(多实例) */
+  'multiinstance_variablepackage',
+  /** 完成条件(多实例) */
+  'multiinstance_conditionpackage',
+  'multiinstance_typepackage',
+  /** 表单引用 */
+  'formkeydefinitionpackage',
+  'formreferencepackage',
+];
+
+const excludes = [...excludeBaseNames, ...excludeUnUseNames];
+
+const CUSTOM_PROPERTIES = {
+  formproperties: FormDataProps,
+  conditionaleventcondition: ConditionProps,
+  conditionsequenceflow: ConditionProps,
+};
+
+const CUSTOM_PROPERTIES_IDS = Object.keys(CUSTOM_PROPERTIES);
+
+const checkCustom = (element, injector, item, entries = []) => {
+  const DataProps = CUSTOM_PROPERTIES[item.id];
+  if (DataProps) {
+    const group = DataProps({ element, injector });
+    group && entries.push(group);
   }
+  return entries;
+};
 
-  const { properties } = property;
+export function BaseProps(props) {
+  const { element, injector } = props;
+  const pts = getElementStencil(element);
+  // const businessObject = getBusinessObject(element);
+  // const eventDefinitions = businessObject.get('eventDefinitions') || [];
+  const translate = injector.get('translate');
+
   const entries = [];
 
-  for (let index = 0; index < properties.length; index++) {
-    const item = properties[index];
-    // 暂时处理string
-    if (item.type === 'String') {
-      entries.push({
-        id: item.id,
-        component: getPropertyComponent(item),
-        isEdited: isTextFieldEntryEdited,
-      });
+  for (const pt of pts.propertyPackages || []) {
+    const property = propertyPackagesMap[pt];
+
+    // 排除
+    if (excludes.includes(pt)) {
+      continue;
+    }
+
+    const { properties } = property;
+
+    for (let index = 0; index < properties.length; index++) {
+      const item = properties[index];
+      const items = properTransform(item);
+      if (items) {
+        // flowable 配置项映射多个输入
+        if (items.length > 1) {
+          const itemEntries = [];
+          items.forEach(i => {
+            pushPropertyEntries(i, itemEntries);
+          });
+          entries.push({
+            id: item.id,
+            label: translate(item.title),
+            tooltip: item.description && (
+              <div>
+                <p>{translate(item.description)}</p>
+              </div>
+            ),
+            component: Group,
+            entries: itemEntries,
+          });
+        } else {
+          items.forEach(i => {
+            pushPropertyEntries(i, entries);
+          });
+        }
+        continue;
+      } else if (CUSTOM_PROPERTIES_IDS.includes(item.id)) {
+        // 自定义配置项组件
+        checkCustom(element, injector, item, entries);
+        continue;
+      }
+      pushPropertyEntries(item, entries);
     }
   }
 
   return entries;
-}
-
-// function Components(properties) {
-//   switch (type) {
-//     case 'String':
-//       return (
-//         <TextFieldEntry
-//           element={element}
-//           id={properties.id}
-//           label={translate('Condition Expression')}
-//           getValue={getValue}
-//           setValue={setValue}
-//           debounce={debounce}
-//         />
-//       );
-
-//     default:
-//       return (
-//         <TextFieldEntry
-//           element={element}
-//           id={properties.id}
-//           label={translate('Condition Expression')}
-//           getValue={getValue}
-//           setValue={setValue}
-//           debounce={debounce}
-//         />
-//       );
-//   }
-// }
-
-function getPropertyComponent(properties) {
-  function PropertyComponent(props) {
-    const { element } = props;
-    const commandStack = useService('commandStack'),
-      bpmnFactory = useService('bpmnFactory'),
-      translate = useService('translate'),
-      debounce = useService('debounceInput');
-
-    const getValue = () => {
-      return getConditionExpression(element).get('body');
-    };
-
-    const setValue = value => {
-      if (value === '') {
-        updateCondition(element, commandStack, undefined);
-      } else {
-        // (2) Create and set formalExpression element containing the conditionExpression
-        const attributes = { body: '' };
-        const formalExpressionElement = createFormalExpression(
-          element,
-          attributes,
-          bpmnFactory
-        );
-
-        updateCondition(element, commandStack, formalExpressionElement);
-      }
-      // createElement(
-      //   'camunda:In',
-      //   {
-      //     businessKey: DEFAULT_BUSINESS_KEY,
-      //   },
-      //   parent,
-      //   bpmnFactory
-      // );
-      // const conditionExpression = createElement(
-      //   'bpmn:FormalExpression',
-      // 	{ body: value },
-      //   is(element, 'bpmn:SequenceFlow')
-      //     ? getBusinessObject(element)
-      //     : getConditionalEventDefinition(element),
-      //   bpmnFactory
-      // );
-
-      // updateCondition(element, commandStack, conditionExpression);
-    };
-
-    return (
-      <TextFieldEntry
-        element={element}
-        id={properties.id}
-        label={translate(properties.title)}
-        getValue={getValue}
-        setValue={setValue}
-        debounce={debounce}
-      />
-    );
-  }
-
-  return PropertyComponent;
-}
-
-function ConditionType(props) {
-  const { element } = props;
-
-  const commandStack = useService('commandStack');
-  const bpmnFactory = useService('bpmnFactory');
-  const translate = useService('translate');
-
-  const getValue = () => {
-    return getConditionType(element);
-  };
-
-  const setValue = value => {
-    // (1) Remove formalExpression if <none> is selected
-    if (value === '') {
-      updateCondition(element, commandStack, undefined);
-    } else {
-      // (2) Create and set formalExpression element containing the conditionExpression
-      const attributes = {
-        body: '',
-      };
-      const formalExpressionElement = createFormalExpression(
-        element,
-        attributes,
-        bpmnFactory
-      );
-
-      updateCondition(element, commandStack, formalExpressionElement);
-    }
-  };
-
-  const getOptions = () => [
-    { value: '', label: translate('<none>') },
-    { value: 'expression', label: translate('Expression') },
-  ];
-
-  return (
-    <SelectEntry
-      element={element}
-      id='conditionType'
-      label={translate('Type')}
-      getValue={getValue}
-      setValue={setValue}
-      getOptions={getOptions}
-    />
-  );
-}
-
-function getConditionalEventDefinition(element) {
-  if (!is(element, 'bpmn:Event')) {
-    return false;
-  }
-
-  return getEventDefinition(element, 'bpmn:ConditionalEventDefinition');
-}
-
-function getConditionType(element) {
-  const conditionExpression = getConditionExpression(element);
-
-  if (!conditionExpression) {
-    return '';
-  } else {
-    return 'expression';
-  }
-}
-
-/**
- * getConditionExpression - get the body value of a condition expression for a given element
- *
- * @param  {ModdleElement} element
- *
- * @return {string|undefined}
- */
-function getConditionExpression(element) {
-  const businessObject = getBusinessObject(element);
-
-  if (is(businessObject, 'bpmn:SequenceFlow')) {
-    return businessObject.get('conditionExpression');
-  } else if (getConditionalEventDefinition(businessObject)) {
-    return getConditionalEventDefinition(businessObject).get('condition');
-  }
-}
-
-function updateCondition(element, commandStack, condition = undefined) {
-  if (is(element, 'bpmn:SequenceFlow')) {
-    commandStack.execute('element.updateProperties', {
-      element,
-      properties: {
-        conditionExpression: condition,
-      },
-    });
-  } else {
-    commandStack.execute('element.updateModdleProperties', {
-      element,
-      moddleElement: getConditionalEventDefinition(element),
-      properties: {
-        condition,
-      },
-    });
-  }
-}
-
-function createFormalExpression(parent, attributes, bpmnFactory) {
-  return createElement(
-    'bpmn:FormalExpression',
-    attributes,
-    is(parent, 'bpmn:SequenceFlow')
-      ? getBusinessObject(parent)
-      : getConditionalEventDefinition(parent),
-    bpmnFactory
-  );
 }

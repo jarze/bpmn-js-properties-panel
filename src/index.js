@@ -7,3 +7,5 @@ export { default as FlowablePropertiesProviderModule } from './provider/flowable
 
 // hooks
 export { useService } from './hooks';
+
+export { default as FlowableDescriptors } from './provider/flowable/descriptors/flowable';

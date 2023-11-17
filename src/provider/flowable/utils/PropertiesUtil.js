@@ -12,13 +12,16 @@ import {
   getTimerEventDefinition,
   getConditionalEventDefinition,
 } from '../../../utils/EventDefinitionUtil';
-import elementSet from '../resource/property_set';
+import propertySet from '../resource/property_set';
 import * as xmlConstants from './BpmnXMLConstants';
 // import * as stencilConstants from './StencilConstants';
 
 export const Prefix = 'flowable:';
 
-let propertiesIdMap = {};
+let propertiesIdMap = {
+  /** 到期时间 */
+  duedatedefinition: 'dueDate',
+};
 
 for (const xmlC in xmlConstants) {
   const v = xmlConstants[xmlC];
@@ -28,7 +31,12 @@ for (const xmlC in xmlConstants) {
 bpmStencil.propertyPackages.forEach(i => {
   i.properties.forEach(j => {
     // 小写映射
+
     j.key = propertiesIdMap[j.id] || j.id;
+
+    if (!propertiesIdMap[j.id]) {
+      console.log(propertiesIdMap[j.id], j.id, '------------------');
+    }
   });
 });
 
@@ -100,7 +108,7 @@ export function stencilsTypeParse(element) {
         }
       }
     }
-    return `${prefix}Event`;
+    return `${prefix}NoneEvent`;
   } else {
     return type;
   }
@@ -112,3 +120,12 @@ export function getElementStencil(element) {
   console.log(id, stencilsMap);
   return stencilsMap[id] || {};
 }
+
+/** flowable 定义属性转换多输入 */
+export const properTransform = item => {
+  const transformProperties = propertySet[item.id];
+  if (transformProperties) {
+    return transformProperties;
+  }
+  return null;
+};
