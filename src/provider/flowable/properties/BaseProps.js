@@ -77,8 +77,9 @@ export function BaseProps(props) {
 
     for (let index = 0; index < properties.length; index++) {
       const item = properties[index];
-      const items = properTransform(item);
+      let items = properTransform(item);
       if (items) {
+        items = items.map(i => ({ ...item, ...i }));
         // flowable 配置项映射多个输入
         if (items.length > 1) {
           const itemEntries = [];
